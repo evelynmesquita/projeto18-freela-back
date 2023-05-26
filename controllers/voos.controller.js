@@ -37,12 +37,12 @@ export const vooDetalhes = async (req, res) => {
     try {
         const vooId = req.params.vooId;
         const query =
-            'SELECT voos.*, origem.nome AS cidade_origem, destino.nome AS cidade_destino, companhias_aereas.nome AS companhia_aerea ' +
-            'FROM voos ' +
-            'JOIN cidades AS origem ON voos.cidade_origem_id = origem.id ' +
-            'JOIN cidades AS destino ON voos.cidade_destino_id = destino.id ' +
-            'JOIN companhias_aereas ON voos.companhia_aerea_id = companhias_aereas.id ' +
-            'WHERE voos.id = $1';
+            `SELECT voos.*, origem.nome AS cidade_origem, destino.nome AS cidade_destino, companhias_aereas.nome AS companhia_aerea
+            FROM voos
+            JOIN cidades AS origem ON voos.cidade_origem_id = origem.id
+            JOIN cidades AS destino ON voos.cidade_destino_id = destino.id
+            JOIN companhias_aereas ON voos.companhia_aerea_id = companhias_aereas.id
+            WHERE voos.id = $1`;
         const values = [vooId];
 
         const { rows } = await db.query(query, values);
@@ -50,5 +50,21 @@ export const vooDetalhes = async (req, res) => {
     } catch (error) {
         console.error('Erro ao obter os detalhes da passagem:', error);
         res.status(500).send('Erro ao obter os detalhes da passagem');
+    }
+};
+
+export const inserirVoo = async (req, res) => {
+    try {
+        const { companhia_aerea_id, cidade_origem_id, cidade_destino_id, horario_partida, horario_chegada, preco } = req.body;
+        const query = 
+        `INSERT INTO voos (companhia_aerea_id, cidade_origem_id, cidade_destino_id, horario_partida, horario_chegada, preco) 
+        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`;
+
+        const values = [companhia_aerea_id, cidade_origem_id, cidade_destino_id, horario_partida, horario_chegada, preco];
+        const { rows } = await db.query(query, values);
+        res.send(rows[0]);
+    } catch (error) {
+        console.error('Erro ao adicionar viagem:', error);
+        res.status(500).json({ error: 'Erro ao adicionar viagem' });
     }
 };
