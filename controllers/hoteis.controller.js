@@ -29,3 +29,31 @@ export const listaHoteisCidade = async (req, res) => {
     }
 };
 
+export const hotelDetalhes = async (req, res) => {
+    try {
+        const hotelId = req.params.hotelId;
+        const query =
+            `SELECT hoteis.*, cidades.nome AS cidade, comodidades.nome AS comodidade
+            FROM hoteis
+            JOIN cidades ON hoteis.cidade_id = cidades.id 
+            JOIN hotel_comodidades ON hoteis.id = hotel_comodidades.hotel_id
+            JOIN comodidades ON hotel_comodidades.comodidade_id = comodidades.id
+            WHERE hoteis.id = $1`;
+            
+        const values = [hotelId];
+
+        const { rows } = await db.query(query, values);
+        const hotel = {
+            id: rows[0].id,
+            nome: rows[0].nome,
+            descricao: rows[0].descricao,
+            fotos: rows[0].foto,
+            preco_diaria: rows[0].preco_diaria,
+            comodidades: rows.map((row) => row.comodidade),
+        };
+        res.send(hotel);
+    } catch (error) {
+        console.error('Erro ao obter os detalhes da hospedagem:', error);
+        res.status(500).send('Erro ao obter os detalhes da hospedagem');
+    }
+};
